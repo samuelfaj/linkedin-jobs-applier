@@ -1,7 +1,9 @@
 import { ElementHandle } from "puppeteer";
 import { PuppeteerService } from "./PuppeteerSevice";
-import { getText, getTextFromElement, sleep } from "../functions";
+import { getTextFromElement, sleep } from "../functions";
 import { ApplyService } from "./ApplyService";
+import ChatGptHelper from "../helpers/ChatGptHelper";
+import { DEFINES } from "..";
 
 export class JobCardService {
     public jobDetails: ElementHandle<Element> | null = null;
@@ -9,6 +11,20 @@ export class JobCardService {
     public about: string | null = null;
 
     constructor(private puppeteerService: PuppeteerService, private jobCard: ElementHandle<Element>) {
+    }
+
+    private async hasReachedLimit(){
+        const feedbackLines = await this.puppeteerService.page.$$('.artdeco-inline-feedback__message');
+
+        for(const feedbackLine of feedbackLines){
+            const text = await getTextFromElement(feedbackLine as ElementHandle<Element>);
+            console.log(`Feedback: ${text}`);
+            if(text?.toLowerCase().includes(`Easy Apply limit`.toLowerCase())){
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     private async getJobDetails(){;
@@ -54,12 +70,37 @@ export class JobCardService {
             console.log('About the job:')
             console.log(aboutText);
 
-            if(easyApplyButton) {
-                await easyApplyButton.click();
-                await this.puppeteerService.page.waitForSelector('.jobs-easy-apply-modal', { timeout: 2000 });
+            if(await this.hasReachedLimit()){
+                console.log('🔴 You have reached the limit of applications');
+                await sleep(60 * 60 * 1000); // 1 hour
+                process.exit(1);
+            }
 
-                const applyService = new ApplyService(this.puppeteerService, this);
-                await applyService.apply();
+            if(easyApplyButton) {
+                const answer = await ChatGptHelper.sendText(
+                    'gpt-4.1-nano', 
+                    `PROFILE: ${DEFINES.ABOUT_ME}\n\nBased on my profile, answer if this job is a good fit for me. Return only the "YES" or "NO", without any other text.`
+                );
+
+                if(answer?.toLocaleLowerCase().includes('yes')){
+                    console.log('🟢 This job is a good fit');
+
+                    await easyApplyButton.click();
+                    
+                    await sleep(1000);
+                    if(await this.hasReachedLimit()){
+                        console.log('🔴 You have reached the limit of applications');
+                        await sleep(60 * 60 * 1000); // 1 hour
+                        process.exit(1);
+                    }
+
+                    await this.puppeteerService.page.waitForSelector('.jobs-easy-apply-modal', { timeout: 2000 });
+
+                    const applyService = new ApplyService(this.puppeteerService, this);
+                    await applyService.apply();
+                }else{
+                    console.log('🔴 This job is not a good fit');
+                }
             }
 
             console.log(`======================`);

@@ -45,7 +45,7 @@ export class LinkedInService {
         console.log("Logged in"); 
     }
 
-    async searchJobs(link = DEFINES.jobsLink, pageNumber = 0){
+    async searchJobs(link = DEFINES.JOB_LINK, pageNumber = 0){
         const page = this.puppeteerService.page;
 
         await this.puppeteerService.goto(link);
@@ -84,6 +84,6 @@ export class LinkedInService {
         pageNumber++;
 
         console.log(`Going to page ${pageNumber}`); 
-        await this.searchJobs(DEFINES.jobsLink + '&start=' + (pageNumber * 25), pageNumber);
+        await this.searchJobs(DEFINES.JOB_LINK + '&start=' + (pageNumber * 25), pageNumber);
     }
 }

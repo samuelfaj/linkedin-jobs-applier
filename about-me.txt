@@ -1,0 +1,118 @@
+<<<<<<<<<<<<EDIT THIS FILE!!>>>>>>>>>>>>>
+
+I'm Samuel Fajreldines, full stack senior Software engineer.
+
+I'm brazilian, allowed to work remotely to US companies.
+I'm not able to be hired as worker (in w2 contracts, for example).
+I'm able to work under contracts like C2C or 1099.
+
+I don't want to require any visa neither now or in future.
+I want to work remotely to US companies. Not hybrid. Not on site.
+
+
+I have more then 12 year of experience with all javascript, php, relational and non-relational databases and cloud computing.
+Even if my resume don't show 12 years of experiencie in all languages, all language that I know I have 10 to 12 years of experience;
+
+Expectations of salary is 40 to 45 dollars/h or 6.4k - 7.2k / month
+
+This is my resume:
+
+
+Samuel Fajreldines - Developer
+
+I am a specialist in the entire JavaScript and TypeScript ecosystem.
+I am expert in DevOps and Serverless Architecture.
+I am expert in PHP and its frameworks.
+
+📞 +55 (51) 99226-5039
+✉️ samuelfajreldines@gmail.com
+
+⸻
+
+Experience
+
+SECURITYSCORECARD
+
+Senior Software Engineer
+Nov. 2023 - Present | New York, United States
+	•	Focused on frontend development: user-centric interfaces, performance, seamless experiences.
+	•	Collaborated with designers, PMs, and backend engineers.
+	•	Highlights:
+	•	Reduced system bundle size by 90% (8x faster load speed).
+	•	Eliminated duplicate requests (boosted backend efficiency).
+
+Tech: Node.js, Terraform, React, Redux / React Query, TypeScript, AWS, Playwright, Cypress
+
+⸻
+
+MAHISOFT INC
+
+Senior Software Engineer
+Dec. 2022 - Nov. 2023 | New York, United States
+	•	Lead technologist for Top Trader League project.
+	•	Architected backend systems, optimized databases, built UI.
+	•	Highlights:
+	•	Created asynchronous messaging system.
+	•	Built serverless architecture on Google Cloud.
+
+Tech: Node.js, PHP (Laravel), React, Redux / React Query, Google Cloud, AWS, Terraform
+
+⸻
+
+VAGALUME MÍDIA
+
+Senior Software Engineer
+Aug. 2021 - Dec. 2022
+	•	Lead Full Stack Dev, guided by AWS expert Daniel.
+	•	Rebuilt Vagalume Radio’s backend from scratch.
+	•	Highlights:
+	•	Mastered DevOps and scalability.
+	•	Reduced AWS costs.
+
+Tech: Node.js, PHP, React, Redux / React Query, Vue.js, AWS, Terraform
+
+⸻
+
+ANILHA
+
+Founder
+Feb. 2019 - Dec. 2021 (Side Project)
+	•	Built app for flexible diet and workouts.
+	•	Key personal learning experience.
+
+Tech: Node.js, Ionic, Angular, AWS Lambda, DynamoDB, Terraform
+
+⸻
+
+SECRETÁRIA VIRTUAL
+
+Senior Software Engineer
+Sep. 2019 - Aug. 2021
+	•	Led technology for multiple companies under Secretaria Virtual.
+	•	Focus on infrastructure, system dev, monitoring, and Agile workflows.
+	•	Introduced cloud computing and CI/CD.
+
+Tech: Node.js, PHP, AngularJS, Laravel, CodeIgniter, Ionic
+
+⸻
+
+E-TRUST
+
+Senior Software Engineer
+Sep. 2017 - Sep. 2019
+	•	Worked on information security platforms.
+	•	Revamped frontend of Horacius system, modernized while maintaining legacy support.
+	•	Introduced OOP, CI, automated migrations.
+
+Tech: PHP, Microsoft SQL Server, Windows Server
+
+⸻
+
+Education
+
+UniRitter Laureate International Universities
+Bachelor of Computer Science
+2015 - 2018 (incomplete)
+	•	Strong focus on System Analysis and Development.
+	•	Recognized for academic excellence.
+	•	Left to pursue professional opportunities.

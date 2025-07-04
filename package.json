@@ -19,6 +19,7 @@
   "homepage": "https://github.com/samuelfaj/linkedIn-apply-agent#readme",
   "description": "",
   "dependencies": {
+    "openai": "^5.8.2",
     "puppeteer": "^24.11.2"
   }
 }
