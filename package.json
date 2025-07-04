@@ -1,0 +1,24 @@
+{
+  "name": "linkedin-apply-agent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "bun src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samuelfaj/linkedIn-apply-agent.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/samuelfaj/linkedIn-apply-agent/issues"
+  },
+  "homepage": "https://github.com/samuelfaj/linkedIn-apply-agent#readme",
+  "description": "",
+  "dependencies": {
+    "puppeteer": "^24.11.2"
+  }
+}
