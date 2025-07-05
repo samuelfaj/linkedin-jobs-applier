@@ -1,3 +1,5 @@
+[![Watch the video](https://img.youtube.com/vi/HDiKCm4FkcI/hqdefault.jpg)](https://www.youtube.com/watch?v=HDiKCm4FkcI)
+
 # LinkedIn Apply Agent
 
 An automated job application bot for LinkedIn that streamlines the process of applying to jobs using LinkedIn's Easy Apply feature.
