@@ -1,4 +1,4 @@
-[![Watch the video](https://img.youtube.com/vi/HDiKCm4FkcI/hqdefault.jpg)](https://www.youtube.com/watch?v=HDiKCm4FkcI)
+[![Watch the video](https://github.com/samuelfaj/linkedin-jobs-applier/blob/main/gif.gif?raw=true)](https://www.youtube.com/watch?v=HDiKCm4FkcI)
 
 # LinkedIn Apply Agent
 
