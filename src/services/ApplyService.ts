@@ -100,9 +100,11 @@ export class ApplyService {
 
             let error = '';
 
-            if(await q.$('.artdeco-inline-feedback__message')){
-                error = (await getTextFromElement(await q.$('.artdeco-inline-feedback__message') as ElementHandle<Element>) || '').toLowerCase();
-                console.log(`Error: ${error}`);
+            if(await q.$('.artdeco-inline-feedback')){
+                error = (await getTextFromElement(await q.$('.artdeco-inline-feedback') as ElementHandle<Element>) || '').toLowerCase();
+                console.log(question, `Error: ${error}`);
+            }else{
+                console.log(question, 'No error found');
             }
 
 
@@ -116,7 +118,7 @@ export class ApplyService {
                 `Based on my profile, answer the following question: ${question}\n\n` + 
                 `If you don't know the exact answer, or it's a bad answer, return what you think is the best answer for the all role.\n` + 
                 `Return only the answer, without any other text.\n` + 
-                `${error}${error.includes('whole') && error.includes('number') ? ' Return only the number (integer), without any other text.' : ''}`
+                `${error}`
             );
 
             if (!answer) continue;

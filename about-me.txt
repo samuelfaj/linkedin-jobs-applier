@@ -8,7 +8,9 @@ I don't want to require any visa neither now or in future.
 I want to work remotely to US companies. Not hybrid. Not on site.
 EXCLUDE ROLES THAT NEED TO BE IN US OR BE A US CITZEN.
 
-I have more then 12 year of experience with all javascript, php, relational and non-relational databases and cloud computing.
+I have more then 12 year of experience with all javascript ecosystem, php, relational and non-relational databases and cloud computing.
+Javascript englobes frontend (angular, react, next.js, ionic) and backend (node.js, bun), etc..
+
 I have 10 years of experience in Google Cloud.
 I have 10 years of experience in AWS.
 Even if my resume don't show 12 years of experiencie in all languages, all language that I know I have 10 to 12 years of experience;
