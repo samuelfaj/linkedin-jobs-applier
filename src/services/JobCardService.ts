@@ -41,9 +41,10 @@ export class JobCardService {
         const jobCard = this.jobCard;
 
         const jobCardText = await getTextFromElement(jobCard as ElementHandle<Element>);
+        const blackListedCompany = DEFINES.BLACK_LIST.find(blackListedCompany => jobCardText?.toLowerCase().includes(blackListedCompany.toLowerCase()));
 
-        if(DEFINES.BLACK_LIST.some(blackListedCompany => jobCardText?.toLowerCase().includes(blackListedCompany.toLowerCase()))){
-            logger.warn(`${jobCardText?.toLowerCase()} job card found - skipping...`);
+        if(blackListedCompany){
+            logger.warn(`${blackListedCompany?.toLowerCase()} job card found - skipping...`);
             return;
         }
 
