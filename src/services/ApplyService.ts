@@ -109,14 +109,14 @@ export class ApplyService {
             // 2) busca a resposta no ChatGPT
             let answer = await ChatGptHelper.sendText(
                 'gpt-4.1-nano', 
-                `PROFILE: ${DEFINES.ABOUT_ME}\n\n` + 
-                `--------------------------------\n\n` + 
                 `ROLE DESCRIPTION: ${this.jobCardService.about}\n\n` + 
+                `--------------------------------\n\n` + 
+                `${DEFINES.ABOUT_ME}\n\n` + 
                 `--------------------------------\n\n` + 
                 `Based on my profile, answer the following question: ${question}\n\n` + 
                 `If you don't know the exact answer, or it's a bad answer, return what you think is the best answer for the all role.\n` + 
                 `Return only the answer, without any other text.\n` + 
-                `${error}`
+                `${error}${error.includes('whole') && error.includes('number') ? ' Return only the number (integer), without any other text.' : ''}`
             );
 
             if (!answer) continue;

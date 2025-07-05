@@ -79,7 +79,7 @@ export class JobCardService {
             if(easyApplyButton) {
                 const answer = await ChatGptHelper.sendText(
                     'gpt-4.1-nano', 
-                    `PROFILE: ${DEFINES.ABOUT_ME}\n\nBased on my profile, answer if this job is a good fit for me. Return only the "YES" or "NO", without any other text.`
+                    `${DEFINES.ABOUT_ME}\n\nBased on the context and my profile, answer if this job is a good fit for me and if it attends to my expectations / requirements. Return only the "YES" or "NO", without any other text.`
                 );
 
                 if(answer?.toLocaleLowerCase().includes('yes')){
