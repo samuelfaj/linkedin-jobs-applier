@@ -120,7 +120,7 @@ export class ApplyService {
             logger.startSpinner('ai-processing', `AI is processing question: "${question}"`);
             
             let answer = await ChatGptHelper.sendText(
-                'gpt-4.1-nano', 
+                'gpt-4.1-mini', 
                 `ROLE DESCRIPTION: ${this.jobCardService.about}\n\n` + 
                 `--------------------------------\n\n` + 
                 `${DEFINES.ABOUT_ME}\n\n` + 

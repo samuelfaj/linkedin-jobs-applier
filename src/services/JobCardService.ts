@@ -89,7 +89,7 @@ export class JobCardService {
                 logger.startSpinner('job-analysis', 'AI is analyzing job compatibility...');
                 
                 const answer = await ChatGptHelper.sendText(
-                    'gpt-4.1-nano', 
+                    'gpt-4.1-mini', 
                     `${DEFINES.ABOUT_ME}\n\nBased on the context and my profile, answer if this job is a good fit for me and if it attends to my expectations / requirements. Return only the "YES" or "NO", without any other text.`
                 );
 
