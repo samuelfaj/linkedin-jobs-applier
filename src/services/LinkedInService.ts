@@ -71,6 +71,8 @@ export class LinkedInService {
                 const jobCardService = new JobCardService(this.puppeteerService, jobCard);
                 const link = await jobCardService.getLink();
 
+                await this.scrollDown(jobCard);
+
                 if(link && !links.includes(link)) {
                     links.push(link);
                     processedJobs++;
@@ -85,11 +87,11 @@ export class LinkedInService {
                         logger.error(`❌ Error processing job ${processedJobs}`, e);
                     }
                 }
-
-                const lastJobCard = jobCards[jobCards.length - 1];
-                logger.debug('Scrolling to load more jobs...');
-                await this.scrollDown(lastJobCard);
             }
+
+            const lastJobCard = jobCards[jobCards.length - 1];
+            logger.debug('Scrolling to load more jobs...');
+            await this.scrollDown(lastJobCard);
         }
 
         logger.success(`Page ${pageNumber + 1} completed - processed ${processedJobs} jobs`);

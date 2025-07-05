@@ -40,6 +40,13 @@ export class JobCardService {
     async apply(){
         const jobCard = this.jobCard;
 
+        const jobCardText = await getTextFromElement(jobCard as ElementHandle<Element>);
+
+        if(DEFINES.BLACK_LIST.some(blackListedCompany => jobCardText?.toLowerCase().includes(blackListedCompany.toLowerCase()))){
+            logger.warn(`${jobCardText?.toLowerCase()} job card found - skipping...`);
+            return;
+        }
+
         const link = await jobCard.$('.job-card-container__link');
 
         if(link) {
@@ -90,11 +97,11 @@ export class JobCardService {
                 
                 const answer = await ChatGptHelper.sendText(
                     'gpt-4.1-mini', 
-                    `${DEFINES.ABOUT_ME}\n\nBased on the context and my profile, answer if this job is a good fit for me and if it attends to my expectations / requirements. Return only the "YES" or "NO", without any other text.`
+                    `${DEFINES.ABOUT_ME}\n\nBased on the context and my profile, answer if this job is a good fit for me and if it attends to my expectations / requirements. Return only the "YES" or "NO", an why you think so. The response must be one phrase. JOB DESCRIPTION: ${this.about}`
                 );
 
                 if(answer?.toLocaleLowerCase().includes('yes')){
-                    logger.succeedSpinner('job-analysis', 'AI determined this job is a good fit!');
+                    logger.succeedSpinner('job-analysis', `AI determined this job is a good fit: ${answer}`);
                     logger.success('🟢 This job matches your profile - proceeding with application');
 
                     await easyApplyButton.click();
@@ -114,7 +121,7 @@ export class JobCardService {
                     const applyService = new ApplyService(this.puppeteerService, this);
                     await applyService.apply();
                 }else{
-                    logger.failSpinner('job-analysis', 'AI determined this job is not a good fit');
+                    logger.failSpinner('job-analysis', `AI determined this job is not a good fit: ${answer}`);
                     logger.warn('🔴 This job does not match your profile - skipping application');
                 }
             }
