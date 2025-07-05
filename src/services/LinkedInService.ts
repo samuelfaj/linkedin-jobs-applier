@@ -4,6 +4,7 @@ import { DEFINES } from "../index";
 import { JobCardService } from "./JobCardService";
 import { ElementHandle } from "puppeteer";
 import { logger } from "../helpers/Logger";
+import fs from 'fs';
 
 export class LinkedInService {
     constructor(private puppeteerService: PuppeteerService) {
@@ -56,7 +57,14 @@ export class LinkedInService {
         await page.waitForSelector(".job-card-list", { timeout: 5000 });
         logger.succeedSpinner('page-load', 'Job listings loaded successfully');
 
-        const links: string[] = [];
+        let links: string[] = [];
+
+        try{
+            links = JSON.parse(fs.readFileSync(__dirname + '/../links.json', 'utf8') || '[]');
+        }catch(e){
+            logger.error('Error reading links.json', e);
+        }
+
         let processedJobs = 0;
 
         let newJobs = true;
@@ -75,6 +83,8 @@ export class LinkedInService {
 
                 if(link && !links.includes(link)) {
                     links.push(link);
+                    fs.writeFileSync(__dirname + '/../links.json', JSON.stringify(links.slice(-10000), null, 2));
+
                     processedJobs++;
                     newJobs = true;
 
