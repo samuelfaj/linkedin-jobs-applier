@@ -3,6 +3,7 @@ import { PuppeteerService } from "./PuppeteerSevice";
 import { getTextFromElement, sleep } from "../functions";
 import { ApplyService } from "./ApplyService";
 import ChatGptHelper from "../helpers/ChatGptHelper";
+import { logger } from "../helpers/Logger";
 import { DEFINES } from "..";
 
 export class JobCardService {
@@ -18,8 +19,8 @@ export class JobCardService {
 
         for(const feedbackLine of feedbackLines){
             const text = await getTextFromElement(feedbackLine as ElementHandle<Element>);
-            console.log(`Feedback: ${text}`);
             if(text?.toLowerCase().includes(`Easy Apply limit`.toLowerCase())){
+                logger.warn('LinkedIn Easy Apply limit reached!', { message: text });
                 return true;
             }
         }
@@ -43,7 +44,8 @@ export class JobCardService {
 
         if(link) {
             await link.click();
-            console.log(`======================`);
+            logger.separator();
+            logger.linkedInActivity('Processing new job card...');
 
             await sleep(1000);
 
@@ -51,8 +53,9 @@ export class JobCardService {
 
             try{
                 easyApplyButton = await this.puppeteerService.page.waitForSelector('.jobs-apply-button--top-card button', { timeout: 1000 });
+                logger.robotActivity('Easy Apply button found');
             }catch(e){
-                console.log('No easy apply button found');
+                logger.warn('No Easy Apply button found - skipping job');
                 return;
             }
 
@@ -62,34 +65,46 @@ export class JobCardService {
             const title = await jobDetails?.$(".job-details-jobs-unified-top-card__job-title");
             const titleText = await getTextFromElement(title as ElementHandle<Element>);
             this.title = titleText || null;
-            console.log(`Title: ${titleText}`);
+            
+            logger.jobApplication(`📋 Job Title: ${titleText}`);
 
             const about = await jobDetails?.$(".jobs-description__container");
             const aboutText = await getTextFromElement(about as ElementHandle<Element>);
             this.about = aboutText || null;
-            console.log('About the job:')
-            console.log(aboutText);
+            
+            logger.showBox(
+                aboutText?.substring(0, 200) + '...' || 'No description available',
+                '📝 Job Description Preview'
+            );
 
+            // Check for application limit
             if(await this.hasReachedLimit()){
-                console.log('🔴 You have reached the limit of applications');
+                logger.error('🔴 You have reached the LinkedIn Easy Apply limit');
+                logger.warn('Waiting 1 hour before next attempt...');
                 await sleep(60 * 60 * 1000); // 1 hour
                 process.exit(1);
             }
 
             if(easyApplyButton) {
+                logger.startSpinner('job-analysis', 'AI is analyzing job compatibility...');
+                
                 const answer = await ChatGptHelper.sendText(
                     'gpt-4.1-nano', 
                     `${DEFINES.ABOUT_ME}\n\nBased on the context and my profile, answer if this job is a good fit for me and if it attends to my expectations / requirements. Return only the "YES" or "NO", without any other text.`
                 );
 
                 if(answer?.toLocaleLowerCase().includes('yes')){
-                    console.log('🟢 This job is a good fit');
+                    logger.succeedSpinner('job-analysis', 'AI determined this job is a good fit!');
+                    logger.success('🟢 This job matches your profile - proceeding with application');
 
                     await easyApplyButton.click();
                     
                     await sleep(1000);
+                    
+                    // Double-check for application limit after clicking
                     if(await this.hasReachedLimit()){
-                        console.log('🔴 You have reached the limit of applications');
+                        logger.error('🔴 Application limit reached during application process');
+                        logger.warn('Waiting 1 hour before retry...');
                         await sleep(60 * 60 * 1000); // 1 hour
                         process.exit(1);
                     }
@@ -99,11 +114,12 @@ export class JobCardService {
                     const applyService = new ApplyService(this.puppeteerService, this);
                     await applyService.apply();
                 }else{
-                    console.log('🔴 This job is not a good fit');
+                    logger.failSpinner('job-analysis', 'AI determined this job is not a good fit');
+                    logger.warn('🔴 This job does not match your profile - skipping application');
                 }
             }
 
-            console.log(`======================`);
+            logger.separator();
         }
     }
 }

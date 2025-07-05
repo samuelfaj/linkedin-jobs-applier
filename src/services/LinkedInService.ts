@@ -3,6 +3,7 @@ import { PuppeteerService } from "./PuppeteerSevice";
 import { DEFINES } from "../index";
 import { JobCardService } from "./JobCardService";
 import { ElementHandle } from "puppeteer";
+import { logger } from "../helpers/Logger";
 
 export class LinkedInService {
     constructor(private puppeteerService: PuppeteerService) {
@@ -23,10 +24,10 @@ export class LinkedInService {
                 await sleep(300);
             }
         }
-
     }
 
     async login(){
+        logger.linkedInActivity('Navigating to LinkedIn login page...');
         await this.puppeteerService.goto("https://www.linkedin.com/login");
 
         let loggedIn = false;
@@ -37,21 +38,26 @@ export class LinkedInService {
                 loggedIn = true;
                 break;
             }catch(e){
-                console.log("Not logged in, waiting 5 seconds");
+                logger.warn('Not logged in yet - waiting 5 seconds...');
                 await sleep(5000);
             }
         }
 
-        console.log("Logged in"); 
+        logger.success('Successfully logged into LinkedIn!');
     }
 
     async searchJobs(link = DEFINES.JOB_LINK, pageNumber = 0){
         const page = this.puppeteerService.page;
 
+        logger.linkedInActivity(`Navigating to job search page (page ${pageNumber + 1})...`);
         await this.puppeteerService.goto(link);
+        
+        logger.startSpinner('page-load', 'Loading job listings...');
         await page.waitForSelector(".job-card-list", { timeout: 5000 });
+        logger.succeedSpinner('page-load', 'Job listings loaded successfully');
 
         const links: string[] = [];
+        let processedJobs = 0;
 
         let newJobs = true;
 
@@ -59,31 +65,40 @@ export class LinkedInService {
             newJobs = false;
             const jobCards = await page.$$(".job-card-list");
 
+            logger.info(`Found ${jobCards.length} job cards on current view`);
+
             for (const jobCard of jobCards) {
                 const jobCardService = new JobCardService(this.puppeteerService, jobCard);
                 const link = await jobCardService.getLink();
 
                 if(link && !links.includes(link)) {
                     links.push(link);
+                    processedJobs++;
                     newJobs = true;
+
+                    logger.robotActivity(`Processing job ${processedJobs} of page ${pageNumber + 1}...`);
 
                     try{
                         await jobCardService.apply();
+                        logger.success(`✅ Job ${processedJobs} processed successfully`);
                     }catch(e){
-                        console.error('Error applying to job', e);
+                        logger.error(`❌ Error processing job ${processedJobs}`, e);
                     }
                 }
 
                 const lastJobCard = jobCards[jobCards.length - 1];
+                logger.debug('Scrolling to load more jobs...');
                 await this.scrollDown(lastJobCard);
             }
         }
 
-        console.log(`Page ${pageNumber} done`);
+        logger.success(`Page ${pageNumber + 1} completed - processed ${processedJobs} jobs`);
+        logger.separator();
 
-        pageNumber++;
+        const nextPageNumber = pageNumber + 1;
+        const nextPageLink = DEFINES.JOB_LINK + '&start=' + (nextPageNumber * 25);
 
-        console.log(`Going to page ${pageNumber}`); 
-        await this.searchJobs(DEFINES.JOB_LINK + '&start=' + (pageNumber * 25), pageNumber);
+        logger.linkedInActivity(`Moving to page ${nextPageNumber + 1}...`);
+        await this.searchJobs(nextPageLink, nextPageNumber);
     }
 }

@@ -3,6 +3,7 @@ import { JobCardService } from "./JobCardService";
 import { PuppeteerService } from "./PuppeteerSevice";
 import { getTextFromElement, sleep } from "../functions";
 import ChatGptHelper from "../helpers/ChatGptHelper";
+import { logger } from "../helpers/Logger";
 import fs from 'fs';
 import { DEFINES } from "..";
 
@@ -42,7 +43,7 @@ export class ApplyService {
         for(const button of buttons || []){
             const text = await getTextFromElement(button as ElementHandle<Element>);
             if(text?.trim() === 'Next' || text?.trim() === 'Review'){
-                console.log(`Next button found: true`);
+                logger.robotActivity('Next button found and ready to click');
                 return button;
             }
         }
@@ -56,12 +57,12 @@ export class ApplyService {
         for(const button of buttons || []){
             const text = await getTextFromElement(button as ElementHandle<Element>);
             if(text?.trim() === 'Submit application'){
-                console.log(`Submit button found: true`);
+                logger.success('Submit button found - ready to submit application');
                 return button;
             }
         }
 
-        console.log(`Submit button found: false`);
+        logger.warn('Submit button not found');
         return null;
     }
 
@@ -71,7 +72,7 @@ export class ApplyService {
         for(const button of buttons || []){
             const text = await getTextFromElement(button as ElementHandle<Element>);
             if(text?.trim() === 'Discard'){
-                console.log(`Discard button found: true`);
+                logger.robotActivity('Discard button found');
                 return button;
             }
         }
@@ -85,30 +86,39 @@ export class ApplyService {
     }
 
     private async fillQuestions(){
+        logger.questionProcessing('Starting to fill application questions...');
+        
         await ( await this.getNextButton())?.click();
 
         const page = this.puppeteerService.page;
 
         const questions = await page.$$('[data-test-form-element]');
-        for (const q of questions) {
+        
+        if (questions.length > 0) {
+            logger.info(`Found ${questions.length} questions to answer`);
+            logger.createProgressBar('questions', questions.length, 'Answering Questions');
+        }
+
+        for (const [index, q] of questions.entries()) {
             // 1) extrai texto da pergunta
             const labelHandle = await q.$('label');
             if (!labelHandle) continue;
             const question = (await (await labelHandle.getProperty('innerText')).jsonValue()).trim();
 
-            console.log(`Question: ${question}`);
+            logger.questionProcessing(`Processing question ${index + 1}/${questions.length}: ${question}`);
 
             let error = '';
 
             if(await q.$('.artdeco-inline-feedback')){
                 error = (await getTextFromElement(await q.$('.artdeco-inline-feedback') as ElementHandle<Element>) || '').toLowerCase();
-                console.log(question, `Error: ${error}`);
+                logger.error(`Question validation error: ${error}`);
             }else{
-                console.log(question, 'No error found');
+                logger.debug('No validation errors found for this question');
             }
 
-
             // 2) busca a resposta no ChatGPT
+            logger.startSpinner('ai-processing', `AI is processing question: "${question}"`);
+            
             let answer = await ChatGptHelper.sendText(
                 'gpt-4.1-nano', 
                 `ROLE DESCRIPTION: ${this.jobCardService.about}\n\n` + 
@@ -121,27 +131,38 @@ export class ApplyService {
                 `${error}`
             );
 
-            if (!answer) continue;
+            if (!answer) {
+                logger.stopSpinner('ai-processing');
+                logger.warn('AI did not provide an answer for this question');
+                continue;
+            }
+
+            logger.succeedSpinner('ai-processing', `AI provided answer: "${answer}"`);
 
             if(error.includes('number')){
                 answer  = answer.replace(/[^0-9\.]/g, '');
+                logger.debug('Answer filtered to numbers only');
             }          
+            
             // 3) trata upload de arquivo
             const fileInput = await q.$('input[type="file"]');
             if (fileInput) {
-              // ajuste o path para o seu currículo ou outro anexo
-              const filePath = process.env.RESUME_PATH || '/path/to/resume.pdf';
-              await fileInput.uploadFile(filePath);
-              continue;
+                logger.robotActivity('File upload field detected');
+                const filePath = process.env.RESUME_PATH || '/path/to/resume.pdf';
+                await fileInput.uploadFile(filePath);
+                logger.success(`File uploaded: ${filePath}`);
+                logger.updateProgressBar('questions', index + 1);
+                continue;
             }
           
             // 4) inputs de data
             const dateInput = await q.$('input[type="date"]');
             if (dateInput) {
-              // preenche com data de hoje (YYYY-MM-DD)
-              const today = new Date().toISOString().split('T')[0];
-              await dateInput.type(today, { delay: 50 });
-              continue;
+                const today = new Date().toISOString().split('T')[0];
+                await dateInput.type(today, { delay: 50 });
+                logger.robotActivity(`Date field filled with: ${today}`);
+                logger.updateProgressBar('questions', index + 1);
+                continue;
             }
           
             // 5) inputs numéricos, email, telefone, URL, texto genérico
@@ -162,9 +183,12 @@ export class ApplyService {
               const inputType = await textInput.evaluate(el => el.getAttribute('type'));
               if(inputType === 'number'){    
                 await textInput.type(answer.replace(/[^0-9\.]/g, ''), { delay: 50 });
+                logger.robotActivity(`Number field filled with: ${answer.replace(/[^0-9\.]/g, '')}`);
               }else{
                 await textInput.type(answer, { delay: 50 });
+                logger.robotActivity(`Text field filled with: ${answer}`);
               }
+              logger.updateProgressBar('questions', index + 1);
               continue;
             }
           
@@ -173,6 +197,8 @@ export class ApplyService {
             if (textarea) {
               await textarea.click();
               await textarea.type(answer, { delay: 50 });
+              logger.robotActivity(`Textarea filled with: ${answer}`);
+              logger.updateProgressBar('questions', index + 1);
               continue;
             }
           
@@ -190,7 +216,9 @@ export class ApplyService {
                   });
                   s.dispatchEvent(new Event('change', { bubbles: true }));
                 }, `#${selectId}`, answer);
+                logger.robotActivity('Multi-select field processed');
               }
+              logger.updateProgressBar('questions', index + 1);
               continue;
             }
           
@@ -215,7 +243,9 @@ export class ApplyService {
                     s.dispatchEvent(new Event('change', { bubbles: true }));
                   }
                 }, `#${selectId}`, answer);
+                logger.robotActivity('Select field processed');
               }
+              logger.updateProgressBar('questions', index + 1);
               continue;
             }
           
@@ -232,11 +262,16 @@ export class ApplyService {
                   if (txt.toLowerCase().includes(answer.toLowerCase())) {
                     await r.click();
                     clicked = true;
+                    logger.robotActivity(`Radio button selected: ${txt}`);
                     break;
                   }
                 }
               }
-              if (!clicked) await radios[0].click(); // fallback
+              if (!clicked) {
+                await radios[0].click();
+                logger.robotActivity('Default radio button selected');
+              }
+              logger.updateProgressBar('questions', index + 1);
               continue;
             }
           
@@ -245,6 +280,8 @@ export class ApplyService {
             if (checkboxes.length) {
               // marca todas ou apenas a primeira
               await checkboxes[0].click();
+              logger.robotActivity('Checkbox selected');
+              logger.updateProgressBar('questions', index + 1);
               continue;
             }
           
@@ -253,20 +290,28 @@ export class ApplyService {
             if (anyInput) {
               await anyInput.click({ clickCount: 3 });
               await anyInput.type(answer, { delay: 50 });
+              logger.robotActivity(`Generic input filled with: ${answer}`);
             }
-          }
+            
+            logger.updateProgressBar('questions', index + 1);
+        }
 
+        logger.stopProgressBar('questions');
+        logger.success('All questions have been processed');
 
         await ( await this.getNextButton())?.click();
         await sleep(1500);
 
         if(await this.hasErrors()){
+            logger.error('Form validation errors found after submission');
             await this.closeModal();
             throw new Error('Errors found');
         }
     }
 
     private async closeModal(){
+        logger.robotActivity('Closing application modal...');
+        
         const closeButton = await this.puppeteerService.page.waitForSelector('.artdeco-modal__dismiss', { timeout: 2000 });
         await closeButton?.click();
 
@@ -275,14 +320,17 @@ export class ApplyService {
             const discardButton = await this.getDiscardButton();
             if(discardButton){
                 await discardButton.click();
+                logger.robotActivity('Application discarded');
             }
         }catch(e){
-            console.log(`Close modal: false`);
+            logger.warn('Could not find discard button');
             return;
         }
     }
 
     async apply(){
+        logger.jobApplication('Starting job application process...');
+        
         const page = this.puppeteerService.page;
         this.div = await page.$('.jobs-easy-apply-modal');
 
@@ -293,27 +341,33 @@ export class ApplyService {
             i++;
 
             if(i > 10){
+                logger.error('Too many attempts to complete application');
                 await this.closeModal();
                 throw new Error('Too many attempts to apply');
             }
 
             const title = await this.getTitle();
-            console.log(`Title: ${title}`);
+            logger.info(`Application step ${i}: ${title}`);
 
             if(await this.hasTitle('Additional Questions')){
+                logger.questionProcessing('Additional questions section detected');
                 await this.fillQuestions();
             }else if(await this.getSubmitButton()){
+                logger.startSpinner('submit', 'Submitting application...');
                 await ( await this.getSubmitButton())?.click(); // initial screen
 
                 await sleep(3000);
+                logger.succeedSpinner('submit', 'Application submitted successfully!');
+                logger.success('🎉 Job application completed successfully!');
+                
                 await this.closeModal();
                 return;
             }else{
+                logger.robotActivity('Proceeding to next application step...');
                 await ( await this.getNextButton())?.click();
             }
 
             await sleep(1000);
         }
-
     }
 }

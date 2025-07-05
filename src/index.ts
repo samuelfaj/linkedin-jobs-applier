@@ -1,6 +1,7 @@
 const puppeteer = require("puppeteer");
 import { PuppeteerService } from "./services/PuppeteerSevice";
 import { LinkedInService } from "./services/LinkedInService";
+import { logger } from "./helpers/Logger";
 import fs from 'fs';
 
 export const DEFINES  = {
@@ -9,9 +10,82 @@ export const DEFINES  = {
 }
 
 const main = async () => {
-    const linkedInService = new LinkedInService(await PuppeteerService.init());
-    await linkedInService.login();
-    await linkedInService.searchJobs();
+    try {
+        // Show welcome banner
+        logger.showBanner('LinkedIn Bot');
+        
+        // Show welcome box
+        logger.showBox(
+            'LinkedIn Job Application Bot\n' +
+            'Automatically applies to jobs on LinkedIn\n' +
+            'With AI-powered question answering\n\n' +
+            'Starting automation...',
+            '🤖 LINKEDIN APPLY AGENT'
+        );
+
+        logger.separator();
+        
+        // Initialize services
+        logger.robotActivity('Initializing LinkedIn automation bot...');
+        
+        logger.startSpinner('puppeteer', 'Starting Puppeteer browser...');
+        const puppeteerService = await PuppeteerService.init();
+        logger.succeedSpinner('puppeteer', 'Puppeteer browser started successfully');
+
+        logger.robotActivity('Creating LinkedIn service instance...');
+        const linkedInService = new LinkedInService(puppeteerService);
+        
+        logger.separator();
+        
+        // Login process
+        logger.linkedInActivity('Starting LinkedIn login process...');
+        logger.startSpinner('login', 'Waiting for LinkedIn login...');
+        
+        await linkedInService.login();
+        
+        logger.succeedSpinner('login', 'Successfully logged into LinkedIn');
+        logger.success('LinkedIn authentication completed');
+        
+        logger.separator();
+        
+        // Job search process
+        logger.jobApplication('Starting job search and application process...');
+        logger.info('Target job search criteria:', {
+            keywords: 'senior software engineer',
+            location: 'Remote/Global',
+            timePosted: 'Last 24 hours',
+            jobType: 'Remote'
+        });
+        
+        logger.startSpinner('job-search', 'Searching for available jobs...');
+        
+        await linkedInService.searchJobs();
+        
+        logger.succeedSpinner('job-search', 'Job search and application process completed');
+        logger.success('All available jobs have been processed');
+        
+    } catch (error) {
+        logger.error('Critical error in main process', error);
+        process.exit(1);
+    }
 }
 
-main();
+// Handle process cleanup
+process.on('SIGINT', () => {
+    logger.warn('Received SIGINT, cleaning up...');
+    logger.cleanup();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    logger.warn('Received SIGTERM, cleaning up...');
+    logger.cleanup();
+    process.exit(0);
+});
+
+// Start the application
+main().catch((error) => {
+    logger.error('Unhandled error in main process', error);
+    logger.cleanup();
+    process.exit(1);
+});

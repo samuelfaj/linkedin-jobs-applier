@@ -24,6 +24,9 @@ This tool is for educational and personal use only. Please be aware that:
 - **🤖 AI-Powered Question Answering**: Uses ChatGPT to automatically answer job application questions
 - **📋 Personal Profile Integration**: Leverages your personal information and resume for intelligent responses
 - **🔍 Context-Aware Responses**: Considers both your profile and job description when answering questions
+- **🎨 Modern Logging System**: Beautiful, animated, and colorful console logs with progress tracking
+- **⚡ Real-time Progress**: Spinners, progress bars, and visual feedback for all operations
+- **🌈 Visual Excellence**: ASCII art banners, styled boxes, and gradient text effects
 
 ## Requirements
 
@@ -99,13 +102,47 @@ src/
 ├── index.ts                 # Main entry point
 ├── functions.ts             # Utility functions
 ├── helpers/
-│   └── ChatGptHelper.ts     # ChatGPT integration for Q&A
+│   ├── ChatGptHelper.ts     # ChatGPT integration for Q&A
+│   └── Logger.ts            # Modern logging system with animations
 └── services/
     ├── ApplyService.ts      # Handles job application process
     ├── JobCardService.ts    # Manages individual job cards
     ├── LinkedInService.ts   # LinkedIn navigation and search
     └── PuppeteerService.ts  # Browser automation
 ```
+
+## 🎨 Modern Logging System
+
+This project features a state-of-the-art logging system that makes monitoring and debugging a visual delight:
+
+### Visual Features
+- **🌈 Colorful Logs**: Different colors for different log types (info, success, warning, error)
+- **🎭 Contextual Emojis**: Specific emojis for robot activities, job applications, LinkedIn interactions
+- **⏰ Timestamps**: Precise timing for all operations
+- **🎪 Animations**: Spinners and progress bars for real-time feedback
+- **📦 Styled Boxes**: Important messages highlighted in beautiful boxes
+- **🎨 ASCII Art**: Rainbow-colored banners and headers
+
+### Specialized Log Types
+```typescript
+logger.robotActivity('Browser automation in progress...');     // 🤖
+logger.jobApplication('Processing job application...');        // 💼
+logger.linkedInActivity('LinkedIn interaction happening...');   // 🔗
+logger.questionProcessing('AI analyzing question...');         // ❓
+logger.aiActivity('ChatGPT generating response...');          // 🧠
+```
+
+For complete documentation of the logging system, see [LOGGING.md](./LOGGING.md).
+
+### Example Output
+When you run the bot, you'll see beautiful output like:
+- Animated ASCII art banner
+- Progress bars for job processing
+- Colorful status messages with emojis
+- Real-time spinners for operations
+- Styled error messages with stack traces
+
+This makes the bot not only functional but also enjoyable to watch and debug!
 
 ## How It Works
 
