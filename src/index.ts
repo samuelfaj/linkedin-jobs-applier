@@ -4,8 +4,9 @@ import { LinkedInService } from "./services/LinkedInService";
 import { logger } from "./helpers/Logger";
 import fs from 'fs';
 
+// ("Software Engineer" OR "Full Stack Developer" OR "Senior Software Engineer" OR "Backend Engineer" OR "Frontend Engineer")  AND ("remote" OR "anywhere" OR "open to anywhere" OR "work from anywhere" OR "anywhere in the world" OR "global team" OR "worldwide" OR "open to global talent" OR "remote worldwide" OR "contractor")  AND ("United States" OR "US based" OR "USA" OR "U.S.")
 export const DEFINES  = {
-    JOB_LINK: `https://www.linkedin.com/jobs/search/?currentJobId=4260941459&distance=25&f_AL=true&f_TPR=r86400&f_WT=2&geoId=103644278&keywords=senior%20software%20engineer&origin=JOB_SEARCH_PAGE_KEYWORD_AUTOCOMPLETE&refresh=true`,
+    JOB_LINK: `https://www.linkedin.com/jobs/search/?currentJobId=4282257402&f_TPR=r604800&f_WT=2&geoId=103644278&keywords=senior%20software%20engineer&origin=JOB_SEARCH_PAGE_JOB_FILTER&refresh=true&sortBy=R`,
     ABOUT_ME: fs.readFileSync(__dirname + '/../about-me.txt', 'utf8'),
     BLACKLIST: [
         'Applicantz',

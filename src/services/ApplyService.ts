@@ -85,7 +85,7 @@ export class ApplyService {
         return errors && errors.length > 0 ? true : false;
     }
 
-    private async fillQuestions(){
+    private async fillQuestions(tryNumber = 0){
         logger.questionProcessing('Starting to fill application questions...');
         
         await ( await this.getNextButton())?.click();
@@ -101,6 +101,8 @@ export class ApplyService {
 
         for (const [index, q] of questions.entries()) {
             // 1) extrai texto da pergunta
+            const qText = (await getTextFromElement(q as ElementHandle<Element>) || '').toLowerCase();
+
             const labelHandle = await q.$('label');
             if (!labelHandle) continue;
             const question = (await (await labelHandle.getProperty('innerText')).jsonValue()).trim();
@@ -120,13 +122,13 @@ export class ApplyService {
             logger.startSpinner('ai-processing', `AI is processing question: "${question}"`);
             
             let answer = await ChatGptHelper.sendText(
-                'gpt-4.1-mini', 
+                'gpt-5-mini', 
                 `ROLE DESCRIPTION: ${this.jobCardService.about}\n\n` + 
                 `--------------------------------\n\n` + 
                 `${DEFINES.ABOUT_ME}\n\n` + 
                 `--------------------------------\n\n` + 
-                `Based on my profile, answer the following question: ${question}\n\n` + 
-                `If you don't know the exact answer, or it's a bad answer, return what you think is the best answer for the all role.\n` + 
+                `Based on my profile, answer the following question: ${qText}\n\n` + 
+                `If you don't know the exact answer, or it's a bad answer, return what you think is the best answer for the role.\n` + 
                 `Return only the answer, without any other text.\n` + 
                 `${error}`
             );
@@ -139,7 +141,7 @@ export class ApplyService {
 
             logger.succeedSpinner('ai-processing', `AI provided answer: "${answer}"`);
 
-            if(error.includes('number')){
+            if(qText.includes('decimal number')){
                 answer  = answer.replace(/[^0-9\.]/g, '');
                 logger.debug('Answer filtered to numbers only');
             }          
@@ -303,9 +305,13 @@ export class ApplyService {
         await sleep(1500);
 
         if(await this.hasErrors()){
-            logger.error('Form validation errors found after submission');
-            await this.closeModal();
-            throw new Error('Errors found');
+          if(tryNumber == 2){
+              logger.error('Form validation errors found after submission');
+              await this.closeModal();
+              throw new Error('Errors found');  
+          }else{
+            await this.fillQuestions(tryNumber + 1);
+          }
         }
     }
 

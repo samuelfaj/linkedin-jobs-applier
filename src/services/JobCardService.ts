@@ -2,9 +2,15 @@ import { ElementHandle } from "puppeteer";
 import { PuppeteerService } from "./PuppeteerSevice";
 import { getTextFromElement, sleep } from "../functions";
 import { ApplyService } from "./ApplyService";
-import ChatGptHelper from "../helpers/ChatGptHelper";
+import ChatGptHelper, { extractJsonFromResponse } from "../helpers/ChatGptHelper";
 import { logger } from "../helpers/Logger";
 import { DEFINES } from "..";
+import fs from 'fs';
+
+const formatJobSaveUrl = (url: string) => {
+    const id = url.split('currentJobId=')[1].split('&')[0];
+    return `https://www.linkedin.com/jobs/search/?currentJobId=${id}`;
+}
 
 export class JobCardService {
     public jobDetails: ElementHandle<Element> | null = null;
@@ -61,7 +67,15 @@ export class JobCardService {
 
             try{
                 easyApplyButton = await this.puppeteerService.page.waitForSelector('.jobs-apply-button--top-card button', { timeout: 1000 });
-                logger.robotActivity('Easy Apply button found');
+
+                const easyApplyButtonText = await getTextFromElement(easyApplyButton as ElementHandle<Element>);
+
+                if(!easyApplyButtonText?.toLowerCase().includes('easy apply'.toLowerCase())){
+                    easyApplyButton = null;
+                    logger.robotActivity('Easy Apply button not found');
+                }else{
+                    logger.robotActivity('Easy Apply button found');
+                }
             }catch(e){
                 logger.warn('No Easy Apply button found - skipping job');
                 return;
@@ -97,11 +111,23 @@ export class JobCardService {
                 logger.startSpinner('job-analysis', 'AI is analyzing job compatibility...');
                 
                 const answer = await ChatGptHelper.sendText(
-                    'gpt-4.1-mini', 
-                    `${DEFINES.ABOUT_ME}\n\nBased on the context and my profile, answer if this job is a good fit for me and if it attends to my expectations / requirements. Return only the "YES" or "NO", an why you think so. The response must be one phrase. JOB DESCRIPTION: ${this.about}`
+                    'gpt-5-nano', 
+                    `${DEFINES.ABOUT_ME}\n\n`+ 
+                    `HARD RULE: IT CANNOT BE A GOOD FIT IF IT REQUIRES TO LIVE IN USA OR BE A USA CITIZEN.\n\n`+
+                    `IF THE JOB SAY THAT IT HIRES FROM ANYWHERE IN THE WORLD OR LATAM OR BRAZIL, AND IF it's a GOOD FIT, you can rate close to 100.\n\n`+
+                    `Based on the context and my profile, answer if this job is a good fit for me and if it attends to my expectations / requirements.`+ 
+                    `Return a JSON and ONLY a JSON: {"isGoodFit": "YES" | "NO", "reason": "string", "rate": 0-100}.`+ 
+                    `JOB DESCRIPTION: ${this.about}`
                 );
 
-                if(answer?.toLocaleLowerCase().includes('yes')){
+                const json = extractJsonFromResponse(answer || '{}');
+
+                if(json?.isGoodFit === 'YES'){
+                    if(json.isGoodFit === 'YES' && json.rate > 90){
+                        const url = this.puppeteerService.page.url();
+                        fs.appendFileSync(__dirname + '/../job-cards.csv', `${json.rate};${json.reason};${formatJobSaveUrl(url)}\n`);
+                    }
+
                     logger.succeedSpinner('job-analysis', `AI determined this job is a good fit: ${answer}`);
                     logger.success('🟢 This job matches your profile - proceeding with application');
 
@@ -124,6 +150,32 @@ export class JobCardService {
                 }else{
                     logger.failSpinner('job-analysis', `AI determined this job is not a good fit: ${answer}`);
                     logger.warn('🔴 This job does not match your profile - skipping application');
+                }
+            }else{
+                // No easy apply button found
+
+                const answer = await ChatGptHelper.sendText(
+                    'gpt-5-nano', 
+                    `${DEFINES.ABOUT_ME}\n\n`+ 
+                    `HARD RULE: IT CANNOT BE A GOOD FIT IF IT REQUIRES TO LIVE IN USA OR BE A USA CITIZEN.\n\n`+
+                    `IF THE JOB SAY THAT IT HIRES FROM ANYWHERE IN THE WORLD OR LATAM OR BRAZIL, AND IF it's a GOOD FIT, you can rate close to 100.\n\n`+
+                    `Based on the context and my profile, answer if this job is a good fit for me and if it attends to my expectations / requirements.`+ 
+                    `Return a JSON and ONLY a JSON: {"isGoodFit": "YES" | "NO", "reason": "string", "rate": 0-100}.`+ 
+                    `JOB DESCRIPTION: ${this.about}`
+                );
+
+                if(answer){
+                    const json = extractJsonFromResponse(answer);
+    
+                    if(json){
+                        logger.succeedSpinner('job-analysis', `AI determined this job is a good fit: ${answer}`);
+                        logger.success(answer);
+    
+                        if(json.isGoodFit === 'YES' && json.rate > 80){
+                            const url = this.puppeteerService.page.url();
+                            fs.appendFileSync(__dirname + '/../job-cards.csv', `${json.rate};${json.reason};${formatJobSaveUrl(url)}\n`);
+                        }
+                    }
                 }
             }
 
