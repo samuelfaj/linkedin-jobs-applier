@@ -135,3 +135,6 @@ coverage/
 
 # Prettier cache
 .prettierrc.cache 
+
+job-cards.csv
+job-cards.txt
